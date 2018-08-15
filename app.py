@@ -6,20 +6,44 @@ from flask_wtf import Form
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from wtforms import StringField, SubmitField
-from flask_mail import Mail
+from flask_mail import Mail, Message
+import os
 from wtforms.validators import Required
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = 'password'
+
+# Database configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///c:/Users/samko/Desktop/website/dev.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+
+# Mail configurations
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app,db)
 mail = Mail(app)
+
+# emails
+def send_email(to, subject, template, **kwargs):
+    """
+    # Testing w/in Flask shell
+    flask shell
+    from app import send_email
+    send_email(app.config["MAIL_USERNAME"], "test", "mail/test")
+    """
+    msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[to])
+    msg.body = render_template(template + '.txt', **kwargs)
+    msg.html = render_template(template + '.html', **kwargs)
+    mail.send(msg)
 
 # forms
 class NameForm(Form):
@@ -32,6 +56,7 @@ tag_entry_associations = db.Table('tag_entry_associations',
     db.Column('entry_id', db.Integer, db.ForeignKey('entries.id'))
 )
 
+# db tables
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
