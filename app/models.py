@@ -1,4 +1,6 @@
 from . import db
+from flask_login import UserMixin
+from . import login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Association Tables
@@ -8,12 +10,12 @@ tag_entry_associations = db.Table('tag_entry_associations',
 )
 
 # db tables
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, index=True)
+    password_hash = db.Column(db.String(128))
     join_time = db.Column(db.DateTime, nullable=False)
     entries = db.relationship('Entry', backref='user', lazy='dynamic')
 
@@ -53,3 +55,8 @@ class Tag(db.Model):
 
     def __repr__(self):
         return 'Tag: {0}'.format(self.tag)
+
+# logs the load user function with the login manager
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
