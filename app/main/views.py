@@ -3,23 +3,7 @@ from .. import db
 from ..models import User
 from ..email import send_email
 from . import main
-from .forms import NameForm
-from datetime import datetime
 
-@main.route('/', methods=['GET', 'POST'])
+@main.route('/')
 def index():
-    form = NameForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.name.data).first()
-        if user is None:
-            user = User(username=form.name.data, join_time=datetime.utcnow())
-            db.session.add(user)
-        session['name'] = form.name.data
-        print(session['name'])
-        form.name.data = ''
-        return redirect(url_for('.index'))
-    # send_email(current_app.config["MAIL_USERNAME"], "test", "mail/test")
-    return render_template('index.html',
-                                form=form,
-                                name=session.get('name'),
-                                current_time=datetime.utcnow())
+    return render_template('index.html')

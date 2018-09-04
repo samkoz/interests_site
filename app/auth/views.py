@@ -12,7 +12,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.verify_password(form.password.data):
-            login_user(user, form.remember_me_data)
+            login_user(user, form.remember_me.data)
             next = request.args.get('next')
             if next is None or not next.startswith('/'):
                 next=url_for('main.index')
@@ -31,7 +31,11 @@ def registration():
         new_user = User(username=username, email=email, password=password, join_time=join_time)
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('main.index'))
+        login_user(new_user, False)
+        next = request.args.get('next')
+        if next is None or not next.startswith('/'):
+            next = url_for('main.index')
+        return redirect(next)
     return render_template('auth/registration.html', form=form)
 
 @auth.route('/logout')
@@ -39,4 +43,4 @@ def registration():
 def logout():
     logout_user()
     flash('You have been logged out.')
-    return render_template('index.html')
+    return redirect(url_for('main.index'))
