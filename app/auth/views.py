@@ -1,8 +1,10 @@
 from flask import render_template, redirect, request, url_for, flash
-from flask_login import login_user
+from flask_login import login_user, logout_user, login_required
 from . import auth
-from .forms import LoginForm
+from .forms import LoginForm, RegistrationForm
 from ..models import User
+from .. import db
+from datetime import datetime
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -16,5 +18,25 @@ def login():
                 next=url_for('main.index')
             return redirect(next)
         flash('Invalid username or password.')
-
     return render_template('auth/login.html', form=form)
+
+@auth.route('/registration', methods=['GET', 'POST'])
+def registration():
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+        password = form.password.data
+        join_time = datetime.utcnow()
+        new_user = User(username=username, email=email, password=password, join_time=join_time)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('main.index'))
+    return render_template('auth/registration.html', form=form)
+
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return render_template('index.html')
