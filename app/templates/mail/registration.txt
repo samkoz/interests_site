@@ -1,0 +1,1 @@
+Welcome to Gustibus, {{ username}}! You are now signed up!
