@@ -1,2 +1,4 @@
-<h1>Welcome to Gustibus, {{ username}}!</h1>
+<h1>Welcome to Gustibus, {{ user.username }}! </h1>
 <p>You are now signed up!</p>
+<p>To confirm your account please click on the following link:</p>
+{{ url_for('auth.confirm', token=token, _external=True) }}
