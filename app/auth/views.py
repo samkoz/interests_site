@@ -1,7 +1,7 @@
 from flask import render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
-from .forms import LoginForm, RegistrationForm, ForgotForm
+from .forms import LoginForm, RegistrationForm, ForgotForm, ChangePasswordForm
 from ..models import User
 from .. import db
 from datetime import datetime
@@ -99,7 +99,24 @@ def forgot_password():
             username=forgotten_user.username, temp_password=temp_password)
         return redirect(url_for('auth.login'))
     return render_template('auth/forgot.html', form=form)
-#
+
+@auth.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.verify_password(form.old_password.data):
+            current_user.password = form.password.data
+            flash('Password Updated!')
+            return redirect(url_for('main.index'))
+        else:
+            form.old_password.data = ''
+            form.password.data = ''
+            form.password2.data = ''
+            flash('Incorrect Current Password')
+            return redirect(url_for('auth.change_password', form=form))
+    return render_template('auth/change_password.html', form=form)
+
 # @auth.route('/password_reset', methods=['GET', 'POST'])
 # def password_reset():
 #     form = PasswordResetForm()
