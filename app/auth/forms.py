@@ -36,6 +36,7 @@ class ChangePasswordForm(FlaskForm):
     password2 = PasswordField('Confirm New Password', validators=[DataRequired()])
     submit = SubmitField('Change Password')
 
+
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), EqualTo('password2', message='Passwords must match.')])
     password2 = PasswordField('Confirm New Password', validators=[DataRequired()])
@@ -47,6 +48,10 @@ class ChangeUsernameForm(FlaskForm):
         DataRequired(), Length(1,64),
         Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0, 'Usernames must have only letters, numbers, dots or underscores')])
     submit = SubmitField('Change Username')
+
+    def validate_username(self, field):
+        if User.query.filter_by(username=field.data).first():
+            raise ValidationError('Username already in use')
 
 
 class ForgotPasswordForm(FlaskForm):
