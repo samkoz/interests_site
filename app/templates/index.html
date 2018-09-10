@@ -3,5 +3,13 @@
 {% block page_content %}
 <div class="page-header">
   <h1>Hello {% if current_user.is_anonymous %}stranger!{% else %}{{ current_user.username }}!{% endif %}</h1>
+</div>{% if users %}
+<div>
+  <ul>
+    {% for user in users %}
+      <li>Username: {{user.username}} --- Email: {{user.email}} --- Join time: {{user.join_time}}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 </div>
 {% endblock %}

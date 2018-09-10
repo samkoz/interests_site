@@ -4,6 +4,7 @@ from . import login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
+from datetime import datetime
 
 
 # Association Tables
@@ -19,7 +20,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, index=True)
     password_hash = db.Column(db.String(128))
-    join_time = db.Column(db.DateTime, nullable=False)
+    join_time = db.Column(db.DateTime, default=datetime.utcnow)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     entries = db.relationship('Entry', backref='user', lazy='dynamic')
     confirmed = db.Column(db.Boolean, default=False)
 
@@ -50,9 +52,28 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
-    def __repr__(self):
-        return '<User {0}; Join time: {1}; Entries: {2}>'.format(self.username, self.join_time, self.entries)
+    def generate_reset_token(self, expiration=3600):
+        s= Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'reset':self.id}).decode('utf-8')
 
+    @staticmethod
+    def reset_password(token, new_password):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token.encode('utf-8'))
+        except:
+            return False
+        user = User.query.get(data.get('reset'))
+        if user is None:
+            return False
+        user.password = new_password
+        db.session.add(user)
+        return True
+
+    def ping(self):
+        self.last_seen = datetime.utcnow()
+        db.session.add(self)
+        db.session.commit()
 
 class Entry(db.Model):
     __tablename__ = 'entries'

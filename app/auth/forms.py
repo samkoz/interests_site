@@ -10,6 +10,7 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Keep me logged in')
     submit = SubmitField('Log In')
 
+
 class RegistrationForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Length(1,64), Email()])
     username = StringField('Username', validators=[
@@ -28,19 +29,30 @@ class RegistrationForm(FlaskForm):
         if User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use')
 
+
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField('Current password', validators=[DataRequired()])
     password = PasswordField('New Password', validators=[DataRequired(), EqualTo('password2', message='Passwords must match.')])
     password2 = PasswordField('Confirm New Password', validators=[DataRequired()])
     submit = SubmitField('Change Password')
 
-class ForgotForm(FlaskForm):
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), EqualTo('password2', message='Passwords must match.')])
+    password2 = PasswordField('Confirm New Password', validators=[DataRequired()])
+    submit = SubmitField('Change Password')
+
+
+class ChangeUsernameForm(FlaskForm):
+    new_username = StringField('Username', validators=[
+        DataRequired(), Length(1,64),
+        Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0, 'Usernames must have only letters, numbers, dots or underscores')])
+    submit = SubmitField('Change Username')
+
+
+class ForgotPasswordForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Length(1,64), Email()])
-    submit = SubmitField('Get temporary password')
+    submit = SubmitField('Send reset password email')
 
     def validate_email(self, field):
         if not User.query.filter_by(email=field.data).first():
-            raise ValidationError('Invalid Email Address.')
-
-class PasswordResetForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Length(1,64), Email()])
+            raise ValidationError('Email not registered.')
